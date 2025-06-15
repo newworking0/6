@@ -29,8 +29,6 @@ def get_machine_info():
     except:
         return "unknown"
 
-def get_pool_stats(wallet):
-
 def start_mining_process(wallet):
     if not os.path.exists("./xmrig"):
         try:
